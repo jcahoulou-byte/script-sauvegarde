@@ -7,43 +7,63 @@ cd "$PSScriptRoot"
 # 🕒 Horodatage
 $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
 Write-Host "$timestamp - Synchronisation automatique lancée"
-
-# 📂 Afficher le dossier de travail
 Write-Host "Dossier de travail : $PSScriptRoot"
 
-# 🔄 Synchroniser avec GitHub distant
-git pull origin master
+# 📦 Initialiser le journal
+$logPath = "$env:USERPROFILE\sync-log.txt"
+$syncResult = "$timestamp - "
 
-# 📜 Lire le fichier .clasp.json pour afficher le scriptId
+# 🔄 Git pull
+try {
+    git pull origin master
+    Write-Host "$timestamp - Git pull terminé"
+} catch {
+    Write-Host "$timestamp - ❌ Échec du git pull : $($_.Exception.Message)"
+    Add-Content $logPath "$timestamp - Git pull FAILED"
+}
+
+# 📜 Lire le scriptId depuis .clasp.json
 $claspConfigPath = Join-Path $PSScriptRoot ".clasp.json"
 if (Test-Path $claspConfigPath) {
-    $claspJson = Get-Content $claspConfigPath | ConvertFrom-Json
-    $scriptId = $claspJson.scriptId
-    Write-Host "Projet Apps Script cible : $scriptId"
+    try {
+        $claspJson = Get-Content $claspConfigPath | ConvertFrom-Json
+        $scriptId = $claspJson.scriptId
+        Write-Host "Projet Apps Script cible : $scriptId"
+    } catch {
+        Write-Host "❌ Erreur lecture .clasp.json : $($_.Exception.Message)"
+    }
 } else {
-    Write-Host "❌ Fichier .clasp.json introuvable. Impossible d'afficher le scriptId."
+    Write-Host "❌ Fichier .clasp.json introuvable"
 }
 
 # 🔍 Vérifier les modifications locales
 $gitStatus = git status --porcelain
 
 if ($gitStatus) {
-    # 🧹 Ajouter et commit les modifications
-    git add .
-    git commit -m "Commit automatique à $timestamp"
-    git push origin master
-    Write-Host "$timestamp - Modifications poussées vers GitHub"
+    try {
+        git add .
+        git commit -m "Commit automatique à $timestamp"
+        git push origin master
+        Write-Host "$timestamp - Modifications poussées vers GitHub"
+        $syncResult += "GitHub OK / "
 
-    # 🚀 Pousser vers Apps Script
-    clasp push
-    Write-Host "$timestamp - Modifications poussées vers Apps Script"
+    } catch {
+        Write-Host "$timestamp - ❌ Échec du git push : $($_.Exception.Message)"
+        $syncResult += "GitHub FAILED / "
+    }
 
-    $syncResult = "$timestamp - Modifications poussées / Changes pushed"
+    try {
+        clasp push
+        Write-Host "$timestamp - Modifications poussées vers Apps Script"
+        $syncResult += "Apps Script OK"
+    } catch {
+        Write-Host "$timestamp - ❌ Échec du clasp push : $($_.Exception.Message)"
+        $syncResult += "Apps Script FAILED"
+    }
 } else {
     Write-Host "$timestamp - Aucun changement à pousser"
-    $syncResult = "$timestamp - Aucun changement / No changes"
+    $syncResult += "No changes"
 }
 
 # 📝 Enregistrer dans le journal
-$logPath = "$env:USERPROFILE\sync-log.txt"
 Add-Content $logPath $syncResult

@@ -6,11 +6,12 @@ cd "$PSScriptRoot"
 
 # 🕒 Horodatage
 $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+$logDate = $timestamp.Split(' ')[0]  # Format YYYY-MM-DD
 Write-Host "$timestamp - Synchronisation automatique lancée"
 Write-Host "Dossier de travail : $PSScriptRoot"
 
-# 📦 Initialiser le journal
-$logPath = "$env:USERPROFILE\sync-log.txt"
+# 📦 Initialiser le journal du jour
+$logPath = "$env:USERPROFILE\sync-log-$logDate.txt"
 $syncResult = "$timestamp - "
 
 # 🔄 Git pull
@@ -46,7 +47,6 @@ if ($gitStatus) {
         git push origin master
         Write-Host "$timestamp - Modifications poussées vers GitHub"
         $syncResult += "GitHub OK / "
-
     } catch {
         Write-Host "$timestamp - ❌ Échec du git push : $($_.Exception.Message)"
         $syncResult += "GitHub FAILED / "
@@ -65,5 +65,5 @@ if ($gitStatus) {
     $syncResult += "No changes"
 }
 
-# 📝 Enregistrer dans le journal
+# 📝 Enregistrer dans le journal du jour
 Add-Content $logPath $syncResult

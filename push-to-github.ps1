@@ -1,4 +1,4 @@
-# 🧠 Forcer l'encodage UTF-8 pour l'affichage
+﻿# 🧠 Forcer l'encodage UTF-8 pour l'affichage
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # 📁 Se placer dans le dossier du script

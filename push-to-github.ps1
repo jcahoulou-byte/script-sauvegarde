@@ -11,8 +11,8 @@ if ($gitStatus) {
     git commit -m "🔄 Commit automatique à $timestamp"
     git push origin master
     Write-Host "✅ Modifications poussées vers GitHub"
-    Add-Content "$env:USERPROFILE\push-log.txt" "$timestamp — ✅ Modifications poussées"
+    Add-Content "$env:USERPROFILE\push-log.txt" "$timestamp — Modifications poussées"
 } else {
     Write-Host "🟡 Aucun changement à pousser"
-    Add-Content "$env:USERPROFILE\push-log.txt" "$timestamp — 🟡 Aucun changement"
+    Add-Content "$env:USERPROFILE\push-log.txt" "$timestamp — Aucun changement"
 }
